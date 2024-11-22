@@ -43,16 +43,25 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         
         .ui-jqgrid {
             font-size: 13px !important;
             border: none !important;
+            width: 100% !important;
         }
         
-        .ui-jqgrid-view {
-            border-radius: 8px;
-            overflow: hidden;
+        .ui-jqgrid-view, 
+        .ui-jqgrid-hdiv,
+        .ui-jqgrid-bdiv,
+        .ui-jqgrid-pager {
+            width: 100% !important;
+        }
+        
+        .ui-jqgrid table {
+            width: 100% !important;
         }
     </style>
 </head>
@@ -62,7 +71,7 @@
 
     <script>
         // DOM이 로드된 후 실행
-        $(document).ready(function() {
+        $(function() {
             // GridStack 초기화
             var grid = GridStack.init({
                 cellHeight: 80, // 그리드 셀 높이
@@ -169,14 +178,39 @@
                 caption: "제품 목록",
                 responsive: true,
                 autowidth: true,
-                shrinkToFit: true
+                shrinkToFit: true,
+                forceFit: true,
+                
+                onResizeStop: function(width, index) {
+                    $(this).jqGrid('setGridWidth', width);
+                }
             });
 
             // 그리드 리사이즈 이벤트 처리
             grid.on('resizestop', function(event, element) {
                 if ($(element).find('#gridTable').length > 0) {
-                    $('#gridTable').trigger('resize');
+                    var containerWidth = $(element).find('.grid-table-container').width();
+                    $('#gridTable').jqGrid('setGridWidth', containerWidth - 30);
+                    
+                    var containerHeight = $(element).find('.grid-table-container').height();
+                    $('#gridTable').jqGrid('setGridHeight', containerHeight - 80);
                 }
+            });
+
+            // 초기 사이즈 설정을 위한 함수
+            function resizeGridToFit() {
+                var containerWidth = $('.grid-table-container').width();
+                var containerHeight = $('.grid-table-container').height();
+                $('#gridTable').jqGrid('setGridWidth', containerWidth - 30);
+                $('#gridTable').jqGrid('setGridHeight', containerHeight - 80);
+            }
+
+            // 초기 로드 시 사이즈 조절
+            setTimeout(resizeGridToFit, 100);
+
+            // 윈도우 리사이즈 시 그리드 크기 조절
+            $(window).on('resize', function() {
+                resizeGridToFit();
             });
         });
     </script>
