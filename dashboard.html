@@ -236,9 +236,29 @@
                 // draggable: true
             });
 
-            // 초기 위젯 생성
+            // 위젯 레이아웃 저장 함수
+            function saveLayout() {
+                const items = [];
+                grid.engine.nodes.forEach(node => {
+                    items.push({
+                        type: getWidgetType($(node.el)),
+                        x: node.x,
+                        y: node.y,
+                        w: node.w,
+                        h: node.h
+                    });
+                });
+                localStorage.setItem('dashboardLayout', JSON.stringify(items));
+                
+                // 삭제된 위젯 상태도 저장
+                localStorage.setItem('deletedWidgets', JSON.stringify(Array.from(deletedWidgets)));
+            }
+
+            // createWidget 함수 복원 및 수정
             function createWidget(type) {
                 const config = widgetConfigs[type];
+                if (!config) return;
+
                 const widget = grid.addWidget({
                     x: config.x,
                     y: config.y,
@@ -250,12 +270,54 @@
                 config.init();
                 deletedWidgets.delete(type);
                 updateRestoreButtons();
+                saveLayout();
                 
                 return widget;
             }
 
-            // 초기 위젯 생성
-            Object.keys(widgetConfigs).forEach(type => createWidget(type));
+            // 위젯 레이아웃 복원 함수
+            function restoreLayout() {
+                // 기존 위젯 모두 제거
+                grid.removeAll();
+                
+                // 삭제된 위젯 상태 복원
+                const savedDeletedWidgets = localStorage.getItem('deletedWidgets');
+                if (savedDeletedWidgets) {
+                    deletedWidgets = new Set(JSON.parse(savedDeletedWidgets));
+                    updateRestoreButtons();
+                }
+
+                // 저장된 레이아웃 불러오기
+                const savedLayout = localStorage.getItem('dashboardLayout');
+                if (savedLayout) {
+                    const items = JSON.parse(savedLayout);
+                    items.forEach(item => {
+                        const config = widgetConfigs[item.type];
+                        if (config && !deletedWidgets.has(item.type)) {
+                            const widget = grid.addWidget({
+                                x: item.x,
+                                y: item.y,
+                                w: item.w,
+                                h: item.h,
+                                content: config.content
+                            });
+                            config.init();
+                        }
+                    });
+                } else {
+                    // 저장된 레이아웃이 없을 때만 기본 레이아웃 생성
+                    Object.keys(widgetConfigs).forEach(type => {
+                        if (!deletedWidgets.has(type)) {
+                            createWidget(type);
+                        }
+                    });
+                }
+            }
+
+            // GridStack 이벤트 핸들러 추가
+            grid.on('change', function() {
+                saveLayout();
+            });
 
             // 삭제 버튼 이벤트 처리
             $(document).on('click', '.delete-widget', function(e) {
@@ -266,6 +328,7 @@
                 grid.removeWidget(widgetContent[0]);
                 deletedWidgets.add(widgetType);
                 updateRestoreButtons();
+                saveLayout(); // 삭제 후 레이아웃 저장
             });
 
             // 위젯 타입 확인
@@ -292,6 +355,7 @@
             $(document).on('click', '.restore-button', function() {
                 const type = $(this).data('type');
                 createWidget(type);
+                saveLayout(); // 복원 후 레이아웃 저장
             });
 
             // 차트 초기화 함수들
@@ -399,6 +463,9 @@
                     resizeGridToFit();
                 });
             }
+
+            // 페이지 로드 시 저장된 레이아웃 복원
+            restoreLayout();
         });
     </script>
 </body>
