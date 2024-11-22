@@ -6,9 +6,16 @@
     <title>간단한 대시보드</title>
 
     <!-- 필요한 라이브러리 import -->
+    <!-- GridStack CSS -->
     <link href="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack.min.css" rel="stylesheet"/>
+    
+    <!-- GridStack JS -->
     <script src="https://cdn.jsdelivr.net/npm/gridstack@7.2.3/dist/gridstack-all.js"></script>
+    
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- jqGrid 관련 라이브러리 추가 -->
@@ -153,7 +160,7 @@
 <body>
     <!-- 복원 메뉴 추가 -->
     <div class="restore-menu">
-        <h3>위젯 추가</h3>
+        <h3>위젯 복원</h3>
         <div id="restoreButtons"></div>
     </div>
 
@@ -233,7 +240,6 @@
                 cellHeight: 80,
                 margin: 10,
                 resizable: true,
-                // draggable: true
             });
 
             // 위젯 레이아웃 저장 함수
@@ -254,7 +260,7 @@
                 localStorage.setItem('deletedWidgets', JSON.stringify(Array.from(deletedWidgets)));
             }
 
-            // createWidget 함수 복원 및 수정
+            // createWidget 함수
             function createWidget(type) {
                 const config = widgetConfigs[type];
                 if (!config) return;
@@ -315,13 +321,12 @@
             }
 
             // GridStack 이벤트 핸들러 추가
-            grid.on('change', function() {
+            grid.on('change', function() {  // GridStack 위젯 위치 변경 시 레이아웃 자동 저장
                 saveLayout();
             });
 
             // 삭제 버튼 이벤트 처리
-            $(document).on('click', '.delete-widget', function(e) {
-                e.preventDefault();
+            $(document).on('click', '.delete-widget', function() {
                 const widgetContent = $(this).closest('.grid-stack-item');
                 const widgetType = getWidgetType(widgetContent);
                 
@@ -346,7 +351,7 @@
                 
                 deletedWidgets.forEach(type => {
                     const config = widgetConfigs[type];
-                    const button = $(`<button class="restore-button" data-type="${type}">${config.title} 추가</button>`);
+                    const button = $(`<button class="restore-button" data-type="${type}">${config.title}</button>`);
                     container.append(button);
                 });
             }
