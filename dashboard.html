@@ -30,19 +30,22 @@
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             padding: 15px;
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 30px) !important;
         }
 
         /* 차트 컨테이너 스타일 */
         .chart-container {
-            width: 100%;
-            height: 100%;
+            flex: 1;
+            min-height: 0;
+            position: relative;
         }
 
         /* jqGrid 스타일 추가 */
         .grid-table-container {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
+            flex: 1;
+            min-height: 0;
             display: flex;
             flex-direction: column;
         }
@@ -70,7 +73,9 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
-            padding: 5px;
+            padding: 0;
+            flex-shrink: 0;
+            height: 30px;
         }
         
         .widget-title {
@@ -107,6 +112,41 @@
             padding: 8px 12px;
             margin: 5px;
             cursor: pointer;
+        }
+
+        /* 위젯 헤더 스타일 수정 */
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 0;
+            flex-shrink: 0;
+            height: 30px;
+        }
+
+        /* 차트 컨테이너 스타일 수정 */
+        .chart-container {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+        }
+
+        /* 테이블 컨테이너 스타일 수정 */
+        .grid-table-container {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* jqGrid 관련 스타일 수정 */
+        .ui-jqgrid-view {
+            height: calc(100% - 30px) !important;
+        }
+
+        .ui-jqgrid-bdiv {
+            height: calc(100% - 50px) !important;
         }
     </style>
 </head>
@@ -337,10 +377,9 @@
                 grid.on('resizestop', function(event, element) {
                     if ($(element).find('#gridTable').length > 0) {
                         var containerWidth = $(element).find('.grid-table-container').width();
-                        $('#gridTable').jqGrid('setGridWidth', containerWidth - 30);
-                        
                         var containerHeight = $(element).find('.grid-table-container').height();
-                        $('#gridTable').jqGrid('setGridHeight', containerHeight - 80);
+                        $('#gridTable').jqGrid('setGridWidth', containerWidth - 2);
+                        $('#gridTable').jqGrid('setGridHeight', containerHeight - 60);
                     }
                 });
 
@@ -348,8 +387,8 @@
                 function resizeGridToFit() {
                     var containerWidth = $('.grid-table-container').width();
                     var containerHeight = $('.grid-table-container').height();
-                    $('#gridTable').jqGrid('setGridWidth', containerWidth - 30);
-                    $('#gridTable').jqGrid('setGridHeight', containerHeight - 80);
+                    $('#gridTable').jqGrid('setGridWidth', containerWidth - 2);
+                    $('#gridTable').jqGrid('setGridHeight', containerHeight - 60);
                 }
 
                 // 초기 로드 시 사이즈 조절
