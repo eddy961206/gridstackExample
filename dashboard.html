@@ -63,155 +63,303 @@
         .ui-jqgrid table {
             width: 100% !important;
         }
+
+        /* 삭제 버튼 스타일 */
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+        
+        .widget-title {
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .delete-widget {
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+        
+        /* 복원 메뉴 스타일 */
+        .restore-menu {
+            position: fixed;
+            z-index: 1000;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .restore-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
+    <!-- 복원 메뉴 추가 -->
+    <div class="restore-menu">
+        <h3>위젯 추가</h3>
+        <div id="restoreButtons"></div>
+    </div>
+
     <!-- GridStack 컨테이너 -->
     <div class="grid-stack"></div>
 
     <script>
         // DOM이 로드된 후 실행
         $(function() {
+            // 위젯 설정 객체
+            const widgetConfigs = {
+                lineChart: {
+                    title: '라인 차트',
+                    content: `
+                        <div class="widget-header">
+                            <h3 class="widget-title">라인 차트</h3>
+                            <button class="delete-widget">삭제</button>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="lineChart"></canvas>
+                        </div>
+                    `,
+                    width: 6,
+                    height: 4,
+                    x: 0,
+                    y: 0,
+                    init: function() {
+                        initLineChart();
+                    }
+                },
+                pieChart: {
+                    title: '파이 차트',
+                    content: `
+                        <div class="widget-header">
+                            <h3 class="widget-title">파이 차트</h3>
+                            <button class="delete-widget">삭제</button>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    `,
+                    width: 4,
+                    height: 4,
+                    x: 6,
+                    y: 0,
+                    init: function() {
+                        initPieChart();
+                    }
+                },
+                gridTable: {
+                    title: '제품 목록',
+                    content: `
+                        <div class="widget-header">
+                            <h3 class="widget-title">제품 목록</h3>
+                            <button class="delete-widget">삭제</button>
+                        </div>
+                        <div class="grid-table-container">
+                            <table id="gridTable"></table>
+                            <div id="gridPager"></div>
+                        </div>
+                    `,
+                    width: 10,
+                    height: 4,
+                    x: 0,
+                    y: 4,
+                    init: function() {
+                        initJqGrid();
+                    }
+                }
+            };
+
+            // 삭제된 위젯 추적
+            let deletedWidgets = new Set();
+            
             // GridStack 초기화
             var grid = GridStack.init({
-                cellHeight: 80, // 그리드 셀 높이
-                margin: 10,     // 위젯 간 마진
-                resizable: true, // 리사이즈 가능
-                // draggable: true  // 드래그 가능
+                cellHeight: 80,
+                margin: 10,
+                resizable: true,
+                // draggable: true
             });
 
-            lineChartDivstr = '<div class="chart-container"><canvas id="lineChart"></canvas></div>';
-            pieChartDivstr = '<div class="chart-container"><canvas id="pieChart"></canvas></div>';
-            gridTableDivstr = '<div class="grid-table-container"><table id="gridTable"></table><div id="gridPager"></div></div>';
-
-            // 위젯 추가
-            grid.addWidget({
-                x: 0,
-                y: 0,
-                w: 6,
-                h: 4,
-                content: lineChartDivstr
-            });
-
-            grid.addWidget({
-                x: 6,
-                y: 0,
-                w: 4,
-                h: 4,
-                content: pieChartDivstr
-            });
-
-            // 테이블 위젯 추가
-            grid.addWidget({
-                x: 0,
-                y: 4, // 차트 아래에 위치
-                w: 10,
-                h: 4,
-                content: gridTableDivstr
-            });
-
-            // 라인 차트 생성
-            const lineCtx = document.getElementById('lineChart').getContext('2d');
-            new Chart(lineCtx, {
-                type: 'line',
-                data: {
-                    labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
-                    datasets: [{
-                        label: '월별 매출',
-                        data: [65, 59, 80, 81, 56, 55],
-                        borderColor: 'rgb(75, 192, 192)',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                }
-            });
-
-            // 파이 차트 생성
-            const pieCtx = document.getElementById('pieChart').getContext('2d');
-            new Chart(pieCtx, {
-                type: 'pie',
-                data: {
-                    labels: ['빨강', '파랑', '노랑', '초록'],
-                    datasets: [{
-                        data: [12, 19, 3, 5],
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.8)',
-                            'rgba(54, 162, 235, 0.8)',
-                            'rgba(255, 206, 86, 0.8)',
-                            'rgba(75, 192, 192, 0.8)'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                }
-            });
-
-            // jqGrid 초기화
-            $("#gridTable").jqGrid({
-                datatype: "local",
-                data: [
-                    {id: "1", name: "제품 A", category: "전자기기", price: "50000", stock: "100"},
-                    {id: "2", name: "제품 B", category: "의류", price: "30000", stock: "150"},
-                    {id: "3", name: "제품 C", category: "식품", price: "15000", stock: "200"},
-                    {id: "4", name: "제품 D", category: "전자기기", price: "80000", stock: "50"},
-                    {id: "5", name: "제품 E", category: "의류", price: "45000", stock: "120"}
-                ],
-                colModel: [
-                    { label: '번호', name: 'id', width: 60, align: 'center' },
-                    { label: '제품명', name: 'name', width: 150 },
-                    { label: '카테고리', name: 'category', width: 100 },
-                    { label: '가격', name: 'price', width: 100, align: 'right',
-                      formatter: 'currency', formatoptions: { decimalSeparator: ".", thousandsSeparator: ",", decimalPlaces: 0, prefix: "₩ " }
-                    },
-                    { label: '재고', name: 'stock', width: 80, align: 'right' }
-                ],
-                viewrecords: true,
-                height: '100%',
-                width: '100%',
-                rowNum: 10,
-                pager: "#gridPager",
-                caption: "제품 목록",
-                responsive: true,
-                autowidth: true,
-                shrinkToFit: true,
-                forceFit: true,
+            // 초기 위젯 생성
+            function createWidget(type) {
+                const config = widgetConfigs[type];
+                const widget = grid.addWidget({
+                    x: config.x,
+                    y: config.y,
+                    w: config.width,
+                    h: config.height,
+                    content: config.content
+                });
                 
-                onResizeStop: function(width, index) {
-                    $(this).jqGrid('setGridWidth', width);
-                }
-            });
-
-            // 그리드 리사이즈 이벤트 처리
-            grid.on('resizestop', function(event, element) {
-                if ($(element).find('#gridTable').length > 0) {
-                    var containerWidth = $(element).find('.grid-table-container').width();
-                    $('#gridTable').jqGrid('setGridWidth', containerWidth - 30);
-                    
-                    var containerHeight = $(element).find('.grid-table-container').height();
-                    $('#gridTable').jqGrid('setGridHeight', containerHeight - 80);
-                }
-            });
-
-            // 초기 사이즈 설정을 위한 함수
-            function resizeGridToFit() {
-                var containerWidth = $('.grid-table-container').width();
-                var containerHeight = $('.grid-table-container').height();
-                $('#gridTable').jqGrid('setGridWidth', containerWidth - 30);
-                $('#gridTable').jqGrid('setGridHeight', containerHeight - 80);
+                config.init();
+                deletedWidgets.delete(type);
+                updateRestoreButtons();
+                
+                return widget;
             }
 
-            // 초기 로드 시 사이즈 조절
-            setTimeout(resizeGridToFit, 100);
+            // 초기 위젯 생성
+            Object.keys(widgetConfigs).forEach(type => createWidget(type));
 
-            // 윈도우 리사이즈 시 그리드 크기 조절
-            $(window).on('resize', function() {
-                resizeGridToFit();
+            // 삭제 버튼 이벤트 처리
+            $(document).on('click', '.delete-widget', function(e) {
+                e.preventDefault();
+                const widgetContent = $(this).closest('.grid-stack-item');
+                const widgetType = getWidgetType(widgetContent);
+                
+                grid.removeWidget(widgetContent[0]);
+                deletedWidgets.add(widgetType);
+                updateRestoreButtons();
             });
+
+            // 위젯 타입 확인
+            function getWidgetType(widgetElement) {
+                if (widgetElement.find('#lineChart').length) return 'lineChart';
+                if (widgetElement.find('#pieChart').length) return 'pieChart';
+                if (widgetElement.find('#gridTable').length) return 'gridTable';
+                return null;
+            }
+
+            // 복원 버튼 업데이트
+            function updateRestoreButtons() {
+                const container = $('#restoreButtons');
+                container.empty();
+                
+                deletedWidgets.forEach(type => {
+                    const config = widgetConfigs[type];
+                    const button = $(`<button class="restore-button" data-type="${type}">${config.title} 추가</button>`);
+                    container.append(button);
+                });
+            }
+
+            // 복원 버튼 클릭 이벤트
+            $(document).on('click', '.restore-button', function() {
+                const type = $(this).data('type');
+                createWidget(type);
+            });
+
+            // 차트 초기화 함수들
+            function initLineChart() {
+                const lineCtx = document.getElementById('lineChart').getContext('2d');
+                new Chart(lineCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['1월', '2월', '3월', '4월', '5월', '6월'],
+                        datasets: [{
+                            label: '월별 매출',
+                            data: [65, 59, 80, 81, 56, 55],
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                    }
+                });
+            }
+
+            function initPieChart() {
+                const pieCtx = document.getElementById('pieChart').getContext('2d');
+                new Chart(pieCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['빨강', '파랑', '노랑', '초록'],
+                        datasets: [{
+                            data: [12, 19, 3, 5],
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.8)',
+                                'rgba(54, 162, 235, 0.8)',
+                                'rgba(255, 206, 86, 0.8)',
+                                'rgba(75, 192, 192, 0.8)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                    }
+                });
+            }
+
+            function initJqGrid() {
+                $("#gridTable").jqGrid({
+                    datatype: "local",
+                    data: [
+                        {id: "1", name: "제품 A", category: "전자기기", price: "50000", stock: "100"},
+                        {id: "2", name: "제품 B", category: "의류", price: "30000", stock: "150"},
+                        {id: "3", name: "제품 C", category: "식품", price: "15000", stock: "200"},
+                        {id: "4", name: "제품 D", category: "전자기기", price: "80000", stock: "50"},
+                        {id: "5", name: "제품 E", category: "의류", price: "45000", stock: "120"}
+                    ],
+                    colModel: [
+                        { label: '번호', name: 'id', width: 60, align: 'center' },
+                        { label: '제품명', name: 'name', width: 150 },
+                        { label: '카테고리', name: 'category', width: 100 },
+                        { label: '가격', name: 'price', width: 100, align: 'right',
+                          formatter: 'currency', formatoptions: { decimalSeparator: ".", thousandsSeparator: ",", decimalPlaces: 0, prefix: "₩ " }
+                        },
+                        { label: '재고', name: 'stock', width: 80, align: 'right' }
+                    ],
+                    viewrecords: true,
+                    height: '100%',
+                    width: '100%',
+                    rowNum: 10,
+                    pager: "#gridPager",
+                    caption: "제품 목록",
+                    responsive: true,
+                    autowidth: true,
+                    shrinkToFit: true,
+                    forceFit: true,
+                    
+                    onResizeStop: function(width, index) {
+                        $(this).jqGrid('setGridWidth', width);
+                    }
+                });
+
+                // 그리드 리사이즈 이벤트 처리
+                grid.on('resizestop', function(event, element) {
+                    if ($(element).find('#gridTable').length > 0) {
+                        var containerWidth = $(element).find('.grid-table-container').width();
+                        $('#gridTable').jqGrid('setGridWidth', containerWidth - 30);
+                        
+                        var containerHeight = $(element).find('.grid-table-container').height();
+                        $('#gridTable').jqGrid('setGridHeight', containerHeight - 80);
+                    }
+                });
+
+                // 초기 사이즈 설정을 위한 함수
+                function resizeGridToFit() {
+                    var containerWidth = $('.grid-table-container').width();
+                    var containerHeight = $('.grid-table-container').height();
+                    $('#gridTable').jqGrid('setGridWidth', containerWidth - 30);
+                    $('#gridTable').jqGrid('setGridHeight', containerHeight - 80);
+                }
+
+                // 초기 로드 시 사이즈 조절
+                setTimeout(resizeGridToFit, 100);
+
+                // 윈도우 리사이즈 시 그리드 크기 조절
+                $(window).on('resize', function() {
+                    resizeGridToFit();
+                });
+            }
         });
     </script>
 </body>
