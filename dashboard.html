@@ -11,6 +11,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+    <!-- jqGrid 관련 라이브러리 추가 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/css/ui.jqgrid.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/free-jqgrid/4.15.5/jquery.jqgrid.min.js"></script>
+
     <style>
         /* 대시보드 컨테이너 스타일 */
         .grid-stack {
@@ -31,6 +37,23 @@
             width: 100%;
             height: 100%;
         }
+
+        /* jqGrid 스타일 추가 */
+        .grid-table-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .ui-jqgrid {
+            font-size: 13px !important;
+            border: none !important;
+        }
+        
+        .ui-jqgrid-view {
+            border-radius: 8px;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body>
@@ -48,17 +71,17 @@
                 // draggable: true  // 드래그 가능
             });
 
+            lineChartDivstr = '<div class="chart-container"><canvas id="lineChart"></canvas></div>';
+            pieChartDivstr = '<div class="chart-container"><canvas id="pieChart"></canvas></div>';
+            gridTableDivstr = '<div class="grid-table-container"><table id="gridTable"></table><div id="gridPager"></div></div>';
+
             // 위젯 추가
             grid.addWidget({
-                x: 0, // 시작 x 위치
-                y: 0, // 시작 y 위치
-                w: 6, // 너비 (그리드 단위)
-                h: 4, // 높이 (그리드 단위)
-                content: `
-                    <div class="chart-container">
-                        <canvas id="lineChart"></canvas>
-                    </div>
-                `
+                x: 0,
+                y: 0,
+                w: 6,
+                h: 4,
+                content: lineChartDivstr
             });
 
             grid.addWidget({
@@ -66,11 +89,16 @@
                 y: 0,
                 w: 4,
                 h: 4,
-                content: `
-                    <div class="chart-container">
-                        <canvas id="pieChart"></canvas>
-                    </div>
-                `
+                content: pieChartDivstr
+            });
+
+            // 테이블 위젯 추가
+            grid.addWidget({
+                x: 0,
+                y: 4, // 차트 아래에 위치
+                w: 10,
+                h: 4,
+                content: gridTableDivstr
             });
 
             // 라인 차트 생성
@@ -113,7 +141,44 @@
                     maintainAspectRatio: false,
                 }
             });
+
+            // jqGrid 초기화
+            $("#gridTable").jqGrid({
+                datatype: "local",
+                data: [
+                    {id: "1", name: "제품 A", category: "전자기기", price: "50000", stock: "100"},
+                    {id: "2", name: "제품 B", category: "의류", price: "30000", stock: "150"},
+                    {id: "3", name: "제품 C", category: "식품", price: "15000", stock: "200"},
+                    {id: "4", name: "제품 D", category: "전자기기", price: "80000", stock: "50"},
+                    {id: "5", name: "제품 E", category: "의류", price: "45000", stock: "120"}
+                ],
+                colModel: [
+                    { label: '번호', name: 'id', width: 60, align: 'center' },
+                    { label: '제품명', name: 'name', width: 150 },
+                    { label: '카테고리', name: 'category', width: 100 },
+                    { label: '가격', name: 'price', width: 100, align: 'right',
+                      formatter: 'currency', formatoptions: { decimalSeparator: ".", thousandsSeparator: ",", decimalPlaces: 0, prefix: "₩ " }
+                    },
+                    { label: '재고', name: 'stock', width: 80, align: 'right' }
+                ],
+                viewrecords: true,
+                height: '100%',
+                width: '100%',
+                rowNum: 10,
+                pager: "#gridPager",
+                caption: "제품 목록",
+                responsive: true,
+                autowidth: true,
+                shrinkToFit: true
+            });
+
+            // 그리드 리사이즈 이벤트 처리
+            grid.on('resizestop', function(event, element) {
+                if ($(element).find('#gridTable').length > 0) {
+                    $('#gridTable').trigger('resize');
+                }
+            });
         });
     </script>
 </body>
-</html> 
+</html>
